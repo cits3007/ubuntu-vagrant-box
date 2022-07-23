@@ -1,0 +1,13 @@
+.DS_Store
+.*.swp
+_site/*
+/config
+/out/
+node_modules
+/build/
+TOKEN
+.release*
+.upload*
+/ova/
+developer.rb
+info.json
