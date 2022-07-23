@@ -4,7 +4,17 @@
 
 variable "SOURCE_PATH" {
   type        = string
-  description = "path to input .ova file"
+  description = "path to input .img QCOW2 file"
+}
+
+variable "SOURCE_MD5" {
+  type        = string
+  description = "md5 hash of QCOW2 file"
+}
+
+variable "DISK_SIZE" {
+  type        = number
+  description = "size of disk in bytes"
 }
 
 variable "OUTPUT_DIR" {
@@ -22,10 +32,13 @@ variable "BOX_VERSION" {
   description = "version of box being created"
 }
 
-source "virtualbox-ovf" "cits3007" {
+source "qemu" "cits3007" {
 
-  source_path       = "${var.SOURCE_PATH}"
-  output_directory  = "${var.OUTPUT_DIR}"
+  iso_url           = "file:///${var.SOURCE_PATH}"
+  disk_image        = true
+  format            = "qcow2"
+  iso_checksum      = "md5:${var.SOURCE_MD5}"
+
   shutdown_command  = "sudo shutdown -P now"
 
   communicator      = "ssh"
@@ -35,11 +48,33 @@ source "virtualbox-ovf" "cits3007" {
 
   headless          = true
 
+  # Needn't specify an accelerator - packer docco
+  # says kvm will be used by default if available,
+  # else tcg: https://www.packer.io/docs/builders/qemu.
+
+  #accelerator       = "kvm"
+
+  output_directory  = "${var.OUTPUT_DIR}"
+
+  disk_size         = "${var.DISK_SIZE}b"
+  vm_name           = "${var.BOX_NAME}_${var.BOX_VERSION}.qcow2"
+
+  net_device        = "virtio-net"
+  disk_interface    = "virtio-scsi"
+  boot_wait         = "20s"
+
+  display           = "none"
+
+  # needed, see https://github.com/hashicorp/packer/issues/8693
+  # (??still)
+  qemuargs         = [
+      ["-display", "none"]
+    ]
 }
 
 
 build {
-  sources = ["source.virtualbox-ovf.cits3007"]
+  sources = ["source.qemu.cits3007"]
 
   provisioner "shell" {
       scripts = [

@@ -1,32 +1,35 @@
 
 include ../vars.mk
 
-PROVIDER=virtualbox
+PROVIDER=libvirt
 
 include ../rules.mk
 
 
 
-VMDK_PATH=$(HOME)/.vagrant.d/boxes/generic-VAGRANTSLASH-$(BASE_BOX_NAME)/$(BASE_BOX_VERSION)/$(PROVIDER)/generic-$(BASE_BOX_NAME)-virtualbox-disk001.vmdk
+QCOW_PATH=$(HOME)/.vagrant.d/boxes/generic-VAGRANTSLASH-$(BASE_BOX_NAME)/$(BASE_BOX_VERSION)/$(PROVIDER)/box.img
 
-$(VMDK_PATH):
+$(QCOW_PATH):
 	vagrant box add \
 	    --provider $(PROVIDER) \
 	    --box-version $(BASE_BOX_VERSION) \
 	    $(BASE_BOX)
 
-
-ova/$(BOX_NAME).ova: $(VMDK_PATH)
-	./make_ova.pl $(BOX_NAME) $(VMDK_PATH) ./ova/
-
-
+.qcow_checksum.md5: $(QCOW_PATH)
+	cat $(QCOW_PATH) | pv | md5sum | awk '{ print $$1; }' > $@
 
 build/$(BOX_NAME)_$(BOX_VERSION).box \
 build/$(BOX_NAME)_$(BOX_VERSION).box.md5 \
- : ova/$(BOX_NAME).ova developer.rb info.json
+build/$(BOX_NAME)_$(BOX_VERSION).qcow2 \
+		: $(QCOW_PATH) \
+			developer.rb \
+			info.json \
+			.qcow_checksum.md5
 	set -x && \
 	export PKR_VAR_SOURCE_PATH=$< && \
+	export PKR_VAR_SOURCE_MD5=`cat .qcow_checksum.md5` && \
 	export PKR_VAR_OUTPUT_DIR=$(output_dir) && \
+	export PKR_VAR_DISK_SIZE=`qemu-img info --output=json $(QCOW_PATH) | jq '.["virtual-size"]'` && \
 	export PKR_VAR_BOX_NAME=$(BOX_NAME) && \
 	export PKR_VAR_BOX_VERSION=$(BOX_VERSION) && \
 	packer validate $(packer_template) && \

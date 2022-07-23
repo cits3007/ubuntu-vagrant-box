@@ -12,13 +12,14 @@
 #   $ sudo add-apt-repository ppa:savoury1/curl34
 #   $ sudo apt-get install curl
 
-if (( $# != 2 )); then
-  echo >&2 "expected 2 args: PATH_TO_BOX PATH_TO_MD5"
+if (( $# != 3 )); then
+  echo >&2 "expected 3 args: PATH_TO_BOX  PATH_TO_MD5 PROVIDER"
   exit 1
 fi
 
 BOX_PATH="$1"; shift
 BOX_MD5="$(cat $1 | awk '{print $1; }')"; shift
+PROVIDER_TYPE="$1"; shift
 
 setup_colors() {
   if [[ -t 2 ]] && [[ -z "${NO_COLOR-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
@@ -48,7 +49,6 @@ fi
 set -uo pipefail
 
 BOX_NAME="$(make $MAKE_ARGS print_box_name)"
-PROVIDER_TYPE="virtualbox"
 
 SHORT_DESC="$(make $MAKE_ARGS print_short_desc)"
 VAGRANT_CLOUD_USERNAME="$(make $MAKE_ARGS  print_vagrant_cloud_username)"
@@ -127,7 +127,7 @@ printf '\n'"${GREEN}%s${NOFORMAT}"'\n' "ensuring vagrant-cloud box named $VAGRAN
 cat > .provider_metadata <<END
 {
   "provider": {
-    "name": "virtualbox",
+    "name": "${PROVIDER_TYPE}",
     "checksum": "${BOX_MD5}",
     "checksum_type": "md5"
   }

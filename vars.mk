@@ -13,8 +13,6 @@ BASE_BOX_NAME=ubuntu2004
 BASE_BOX=generic/$(BASE_BOX_NAME)
 BASE_BOX_VERSION=4.1.0
 
-VMDK_PATH=$(HOME)/.vagrant.d/boxes/generic-VAGRANTSLASH-$(BASE_BOX_NAME)/$(BASE_BOX_VERSION)/virtualbox/generic-$(BASE_BOX_NAME)-virtualbox-disk001.vmdk
-
 # name for our built box
 BOX_NAME=cits3007-ubuntu2004
 
