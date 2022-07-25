@@ -4,11 +4,6 @@
 
 set -x
 
-apt-get update
-
-# should already have: wget, curl
-
-
 # dev tools
 
 DEBIAN_FRONTEND=noninteractive \
