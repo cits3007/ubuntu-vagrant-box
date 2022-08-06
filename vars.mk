@@ -1,7 +1,7 @@
 
 # version being built
 
-BOX_VERSION=0.1.2
+BOX_VERSION=0.1.4
 
 AUTHOR="Arran Stewart"
 
