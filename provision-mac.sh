@@ -1,13 +1,39 @@
 #!/usr/bin/env bash
 
-# should be run as root
+# Add CITS3007 development packages for UTM-based guests.
+# The code should work regardless of whether our guest uses Debian or
+# Ubuntu.
+
+# Should be run as root.
+# Assumes that wget and curl are already installed (plus any
+# of their essential dependencies such as ca-certificates).
 
 set -x
 set -euo pipefail
 
+
+# If on a debian-based host: ensure non-free components are enabled.
+
+. /etc/os-release
+
+if [[ "$ID" == "debian" ]]; then
+  cname="$VERSION_CODENAME"
+  sudo tee /etc/apt/sources.list > /dev/null <<EOF
+deb http://deb.debian.org/debian/ ${cname} main non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ ${cname} main non-free non-free-firmware
+
+deb http://security.debian.org/debian-security ${cname}-security main non-free non-free-firmware
+deb-src http://security.debian.org/debian-security ${cname}-security main non-free non-free-firmware
+
+deb http://deb.debian.org/debian/ ${cname}-updates main non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ ${cname}-updates main non-free non-free-firmware
+EOF
+
+  echo "Updated /etc/apt/sources.list for Debian."
+fi
+
 apt-get update
 
-# should already have: wget, curl
 
 # basic apps
 
@@ -36,6 +62,20 @@ DEBIAN_FRONTEND=noninteractive \
     sudo                    \
     time
 
+# possibly missing from UTM base images, but common for vagrant boxes
+
+DEBIAN_FRONTEND=noninteractive \
+  apt-get install --no-install-recommends -y \
+    hdparm                  \
+    kpartx                  \
+    lshw                    \
+    parted                  \
+    unzip                   \
+    usbutils                \
+    vim                     \
+    xz-utils                \
+    zip
+
 # extra utils
 
 DEBIAN_FRONTEND=noninteractive \
@@ -53,7 +93,7 @@ DEBIAN_FRONTEND=noninteractive \
 
 DEBIAN_FRONTEND=noninteractive \
   apt-get install --no-install-recommends -y \
-    afl++-clang             \
+    afl++                      \
     build-essential         \
     clang                   \
     clang-format            \
@@ -65,15 +105,16 @@ DEBIAN_FRONTEND=noninteractive \
     gpg                     \
     indent                  \
     libtool                 \
-    llvm-10-dev             \
+    llvm-dev                \
     pkg-config              \
     splint                  \
     universal-ctags         \
     valgrind                \
-    xxd                     \
-    zzuf
+    xxd
 
 # docco
+
+# Note that manpages-posix-* are in the "non-free" section on Debian.
 
 DEBIAN_FRONTEND=noninteractive \
   apt-get install --no-install-recommends -y \
